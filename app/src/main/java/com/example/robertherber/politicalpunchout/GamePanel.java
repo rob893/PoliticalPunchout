@@ -24,7 +24,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     public static final int WIDTH = 856;
     public static final int HEIGHT = 480;
-    public static final int MOVESPEED = -5;
     boolean fired = false;
     private Background bg;
     //private Bitmap scaledBG;
@@ -77,8 +76,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         button1.setPosition(0, 0);
         button2 = new Button(75, 75, scaledButton);
         button2.setPosition(WIDTH - 75, 0);
-        missiles = new ArrayList<Missile>();
-        enemies = new ArrayList<Enemy>();
+        missiles = new ArrayList<>();
+        enemies = new ArrayList<>();
         enemyStartTime = System.nanoTime();
         player.setPlaying(true);
         thread = new MainThread(getHolder(), this);
@@ -188,8 +187,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         Matrix matrix = new Matrix();
         // setup rotation degree
         matrix.postRotate(degree);
-        Bitmap bmp = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
-        return bmp;
+        src = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
+        return src;
     }
 
     public static Bitmap flip(Bitmap d)
