@@ -31,10 +31,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private Button button1;
     private Button button2;
     private Bitmap scaledButton;
+    private Bitmap scaledBomb;
     private ArrayList<Missile> missiles;
     private ArrayList<Enemy> enemies;
+    private ArrayList<Bomb> bombs;
     private long missileStartTime;
     private long enemyStartTime;
+    private long bombStartTime;
     private Explosion explosion;
     private boolean exStart;
     private MainThread thread;
@@ -71,14 +74,17 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         //scaledBG = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.background), getWidth(), getHeight(), true);
         bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.grassbg1));
         player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.trump_iddle), BitmapFactory.decodeResource(getResources(), R.drawable.trump_run), 256, 256, 10, 6);
-        scaledButton = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.derp), 75, 75, true);
+        scaledButton = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.derp), 85, 85, true);
+        scaledBomb = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.bombs), 35, 35, true);
         button1 = new Button(75, 75, scaledButton);
         button1.setPosition(0, 0);
         button2 = new Button(75, 75, scaledButton);
         button2.setPosition(WIDTH - 75, 0);
         missiles = new ArrayList<>();
         enemies = new ArrayList<>();
+        bombs = new ArrayList<>();
         enemyStartTime = System.nanoTime();
+        bombStartTime = System.nanoTime();
         player.setPlaying(true);
         thread = new MainThread(getHolder(), this);
 
@@ -135,6 +141,43 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 if((missiles.get(i).getX() < -100) || (missiles.get(i).getX() > WIDTH + 50)){
                     missiles.remove(i);
                     break;
+                }
+            }
+
+            //update bombs
+            long bombElapsed = (System.nanoTime() - bombStartTime) / 1000000;
+            if(bombElapsed > 8000){
+                bombs.add(new Bomb(scaledBomb, player.getX(), 0, 35, 35));
+                bombStartTime = System.nanoTime();
+            }
+            for(int i = 0; i<bombs.size(); i++){
+                bombs.get(i).update();
+                if(bombs.get(i).getY() >= HEIGHT -20){
+                    explosion = new Explosion(BitmapFactory.decodeResource(getResources(), R.drawable.explosion), bombs.get(i).getX(), bombs.get(i).getY() - 30, 100, 100, 25);
+                    exStart = true;
+                    bombs.remove(i);
+                    break;
+                }
+                if(collision(player, bombs.get(i))){
+                    explosion = new Explosion(BitmapFactory.decodeResource(getResources(), R.drawable.explosion), bombs.get(i).getX(), bombs.get(i).getY() - 30, 100, 100, 25);
+                    exStart = true;
+                    player.setHitPoints(player.getHitPoints() - 1);
+                    if (player.getHitPoints() == 0) {
+                        player.setPlaying(false);
+                    }
+                    bombs.remove(i);
+                    break;
+                }
+
+                for (int j = 0; j < missiles.size(); j++) {
+                    if (collision(missiles.get(j), bombs.get(i))) {
+                        explosion = new Explosion(BitmapFactory.decodeResource(getResources(), R.drawable.explosion), bombs.get(i).getX(), bombs.get(i).getY() - 30, 100, 100, 25);
+                        exStart = true;
+                        player.setScore(player.getScore() + 25);
+                        missiles.remove(j);
+                        bombs.remove(i);
+                        break;
+                    }
                 }
             }
 
@@ -230,6 +273,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             for(Enemy e: enemies){
                 e.draw(canvas);
             }
+
+            for(Bomb b: bombs){
+                b.draw(canvas);
+            }
             if(exStart) {
                 explosion.draw(canvas);
             }
@@ -250,6 +297,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     public void newGame(){
         missiles.clear();
         enemies.clear();
+        bombs.clear();
         player.setScore(0);
         player.setHitPoints(5);
         player.setX(100);
