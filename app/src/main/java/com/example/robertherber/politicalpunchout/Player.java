@@ -22,6 +22,8 @@ public class Player extends GameObject{
     private Animation runLeftAnimation = new Animation();
     private long startTime;
     private int row;
+    private int level;
+    private int ammo;
 
     public Player(Bitmap resI, Bitmap resR, int w, int h, int numFrames1, int numFrames2){
         x = 100;
@@ -30,6 +32,8 @@ public class Player extends GameObject{
         score = 0;
         height = h;
         width = w;
+        level = 1;
+        ammo = 25;
 
         Bitmap[] imageIdle = new Bitmap[numFrames1];
         Bitmap[] runRight = new Bitmap[numFrames2];
@@ -115,9 +119,17 @@ public class Player extends GameObject{
 
     public void setScore(int x) { score = x; }
 
+    public void setLevel(int x){ level = x; }
+
+    public void setAmmo(int x){ ammo = x; }
+
+    public int getAmmo() { return ammo; }
+
     public boolean isPlaying(){ return playing; }
 
     public int getHitPoints() {return hitPoints; }
 
     public int getScore(){ return score; }
+
+    public int getLevel(){ return level; }
 }

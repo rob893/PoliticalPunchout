@@ -95,13 +95,15 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public boolean onTouchEvent(MotionEvent event){
 
-        if(button1.btn_rect.contains(event.getRawX()/(getWidth()/ (WIDTH*1.f)), event.getRawY()/(getHeight()/ (HEIGHT*1.f))-75) && !fired) { //if button1  contains the touch, fire a missile once
+        if(button1.btn_rect.contains(event.getRawX()/(getWidth()/ (WIDTH*1.f)), event.getRawY()/(getHeight()/ (HEIGHT*1.f))-75) && !fired && player.getAmmo() > 0) { //if button1  contains the touch, fire a missile once
             fired = true;
+            player.setAmmo(player.getAmmo() - 1);
             missiles.add(new Missile(BitmapFactory.decodeResource(getResources(), R.drawable.missile), player.getX()+35, player.getY()+40, 45, 15, 10, false, 13));
             return true;
         }
-        if(button2.btn_rect.contains(event.getRawX()/(getWidth()/ (WIDTH*1.f)), event.getRawY()/(getHeight()/ (HEIGHT*1.f))-75) && !fired) { //if button2 contains the touch, fire a missile once
+        if(button2.btn_rect.contains(event.getRawX()/(getWidth()/ (WIDTH*1.f)), event.getRawY()/(getHeight()/ (HEIGHT*1.f))-75) && !fired && player.getAmmo() > 0) { //if button2 contains the touch, fire a missile once
             fired = true;
+            player.setAmmo(player.getAmmo() - 1);
             missiles.add(new Missile(rotateImage(BitmapFactory.decodeResource(getResources(), R.drawable.missile), 180), player.getX()+200, player.getY()+40, 45, 15, 10, true, 13));
             return true;
         }
@@ -132,6 +134,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             player.update();
             if(exStart) {
                 explosion.update();
+            }
+
+            if(player.getScore() % 500 == 0 && player.getScore() != 0){
+                player.setScore(player.getScore() + 100);
+                player.setLevel(player.getLevel() + 1);
+                player.setAmmo(25 - (player.getLevel()));
             }
 
             //update missiles
@@ -215,6 +223,17 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                         break;
                     }
                 }
+
+                for(int j = 0; j<bombs.size(); j++){
+                    if(collision(bombs.get(j), enemies.get(i))){
+                        explosion = new Explosion(BitmapFactory.decodeResource(getResources(), R.drawable.explosion), enemies.get(i).getX(), enemies.get(i).getY() - 30, 100, 100, 25);
+                        exStart = true;
+                        player.setScore(player.getScore() + 25);
+                        bombs.remove(j);
+                        enemies.remove(i);
+                        break;
+                    }
+                }
             }
         }
         else{
@@ -287,10 +306,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     public void drawText(Canvas canvas) {
         Paint paint = new Paint();
-        paint.setColor(Color.BLACK);
+        paint.setColor(Color.YELLOW);
         paint.setTextSize(30);
         paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
         canvas.drawText("SCORE: " + (player.getScore()), 10, HEIGHT - 10, paint);
+        canvas.drawText("AMMO: " + (player.getAmmo()), 215, HEIGHT - 10, paint);
+        canvas.drawText("LEVEL: " + (player.getLevel()), WIDTH/2, HEIGHT-10, paint);
         canvas.drawText("HEALTH: " + (player.getHitPoints()), WIDTH - 215, HEIGHT - 10, paint);
     }
 
@@ -301,6 +322,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         player.setScore(0);
         player.setHitPoints(5);
         player.setX(100);
+        player.setAmmo(25);
+        player.setLevel(1);
         player.setPlaying(true);
     }
 }
