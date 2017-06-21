@@ -18,7 +18,7 @@ public class Bomb extends GameObject {
         this.y = y;
         width = w;
         height = h;
-        speed = 1+ rand.nextInt(4);
+        speed = 3+ rand.nextInt(3);
 
         image = Bitmap.createBitmap(res, 0, 0, width, height);
     }
