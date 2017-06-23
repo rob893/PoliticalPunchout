@@ -17,7 +17,8 @@ public class Player extends GameObject{
     private boolean walk;
     private boolean wLeft;
     private boolean wRight;
-    private Animation Idleanimation = new Animation();
+    private Animation idleAnimationRight = new Animation();
+    private Animation idleAnimationLeft = new Animation();
     private Animation runRightAnimation = new Animation();
     private Animation runLeftAnimation = new Animation();
     private long startTime;
@@ -35,15 +36,20 @@ public class Player extends GameObject{
         level = 1;
         ammo = 25;
 
-        Bitmap[] imageIdle = new Bitmap[numFrames1];
+        Bitmap[] imageIdleRight = new Bitmap[numFrames1];
+        Bitmap[] imageIdleLeft = new Bitmap[numFrames1];
         Bitmap[] runRight = new Bitmap[numFrames2];
         Bitmap[] runLeft = new Bitmap[numFrames2];
         spritesheetIdle = resI;
         spritesheetRun = resR;
 
-        for(int i = 0; i < imageIdle.length; i++){
+        for(int i = 0; i < imageIdleRight.length; i++){
             row = 1;
-            imageIdle[i] = Bitmap.createBitmap(spritesheetIdle, i*width, row*height, width, height); //second row of sheet for side idle
+            imageIdleRight[i] = Bitmap.createBitmap(spritesheetIdle, i*width, row*height, width, height); //second row of sheet for side idle
+        }
+        for(int i = 0; i < imageIdleLeft.length; i++){
+            row = 3;
+            imageIdleLeft[i] = Bitmap.createBitmap(spritesheetIdle, i*width, row*height, width, height); //second row of sheet for side idle
         }
         for(int i = 0; i < runRight.length; i++){
             row = 1;
@@ -55,8 +61,11 @@ public class Player extends GameObject{
         }
 
 
-        Idleanimation.setFrames(imageIdle);
-        Idleanimation.setDelay(50);
+        idleAnimationRight.setFrames(imageIdleRight);
+        idleAnimationRight.setDelay(50);
+
+        idleAnimationLeft.setFrames(imageIdleLeft);
+        idleAnimationLeft.setDelay(50);
 
         runRightAnimation.setFrames(runRight);
         runRightAnimation.setDelay(35);
@@ -78,8 +87,11 @@ public class Player extends GameObject{
         if(x <-50){
             x= -50;
         }
-        if(!walk) {
-           Idleanimation.update();
+        if(!walk && wRight) {
+           idleAnimationRight.update();
+        }
+        if(!walk && wLeft){
+            idleAnimationLeft.update();
         }
         if(walk && wRight){
             runRightAnimation.update();
@@ -93,8 +105,11 @@ public class Player extends GameObject{
     }
 
     public void draw(Canvas canvas){
-        if(!walk) {
-            canvas.drawBitmap(Idleanimation.getImage(), x, y, null);
+        if(!walk && wRight) {
+            canvas.drawBitmap(idleAnimationRight.getImage(), x, y, null);
+        }
+        if(!walk && wLeft){
+            canvas.drawBitmap(idleAnimationLeft.getImage(), x, y, null);
         }
         if(walk && wRight){
             canvas.drawBitmap(runRightAnimation.getImage(), x, y, null);

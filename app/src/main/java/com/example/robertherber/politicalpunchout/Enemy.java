@@ -12,12 +12,11 @@ import java.util.Random;
 public class Enemy extends GameObject {
 
     private Bitmap spritesheet;
-    //private int x;
-    //private int y;
+    private int speed;
     private Animation animation = new Animation();
     private boolean goingRight;
 
-    public Enemy(Bitmap res, int w, int h, int y, int numFrames){
+    public Enemy(Bitmap res, int w, int h, int y, int playerLevel, int numFrames){
         super.y = y;
 
         width = w;
@@ -25,6 +24,11 @@ public class Enemy extends GameObject {
 
         Random rand = new Random();
         goingRight = rand.nextBoolean();
+
+        speed = playerLevel + rand.nextInt(4);
+        if(speed > 10){  //cap speed
+            speed = 10;
+        }
 
         Bitmap[] image = new Bitmap[numFrames];
         spritesheet = res;
@@ -50,9 +54,9 @@ public class Enemy extends GameObject {
         animation.update();
 
         if(goingRight){
-            x += 5;
+            x += speed;
         } else {
-            x -= 5;
+            x -= speed;
         }
 
     }

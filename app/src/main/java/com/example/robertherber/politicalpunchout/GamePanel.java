@@ -17,6 +17,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by Robert Herber on 6/15/2017.
@@ -28,6 +29,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     public static final int HEIGHT = 528;  //480
     boolean fired = false;
     private Background bg;
+    private Bitmap[] backgrounds;
     private Bitmap scaledBG;
     private Player player;
     private Button button1;
@@ -39,15 +41,17 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private ArrayList<Missile> missiles;
     private ArrayList<Enemy> enemies;
     private ArrayList<Bomb> bombs;
-    private long missileStartTime;
     private long healthStartTime;
     private long enemyStartTime;
     private long bombStartTime;
+    private long trumpSoundStartTime;
+    private Random rand;
     private Explosion explosion;
     private boolean exStart;
     private boolean areHealthpack;
     private SoundPool soundPool;
     private int[] soundIds;
+    private int[] trumpSoundIds;
     private MainThread thread;
 
     public GamePanel(Context context){
@@ -79,9 +83,17 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(SurfaceHolder holder){
-        scaledBG = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.background), WIDTH, HEIGHT, true);
+        rand = new Random();
+        backgrounds = new Bitmap[7];
+        backgrounds[0] = BitmapFactory.decodeResource(getResources(), R.drawable.grassbg1);
+        backgrounds[1] = BitmapFactory.decodeResource(getResources(), R.drawable.background);
+        backgrounds[2] = BitmapFactory.decodeResource(getResources(), R.drawable.bg1);
+        backgrounds[3] = BitmapFactory.decodeResource(getResources(), R.drawable.bg2);
+        backgrounds[4] = BitmapFactory.decodeResource(getResources(), R.drawable.bg3);
+        backgrounds[5] = BitmapFactory.decodeResource(getResources(), R.drawable.bg4);
+        backgrounds[6] = BitmapFactory.decodeResource(getResources(), R.drawable.bg5);
+        scaledBG = Bitmap.createScaledBitmap(backgrounds[rand.nextInt(backgrounds.length)], WIDTH, HEIGHT, true);
         bg = new Background(scaledBG);
-        //bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.grassbg1));
         player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.trump_iddle), BitmapFactory.decodeResource(getResources(), R.drawable.trump_run), 256, 256, 10, 6);
         scaledButton = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.derp), 100, 100, true);
         scaledBomb = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.bombs), 35, 35, true);
@@ -96,14 +108,23 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         bombs = new ArrayList<>();
         //sounds
         soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
-        soundIds = new int[10];
+        soundIds = new int[2];
+        trumpSoundIds = new int[5];
         soundIds[0] = soundPool.load(getContext(), R.raw.boom, 1);
         soundIds[1] = soundPool.load(getContext(), R.raw.pew, 1);
-        //soundIds[2] = soundPool.load(getContext(), R.raw.nope, 1);
+        //trumpSoundIds[0] = soundPool.load(getContext(), R.raw.nope, 1);
+        trumpSoundIds[0] = soundPool.load(getContext(), R.raw.trump1, 1);
+        trumpSoundIds[1] = soundPool.load(getContext(), R.raw.trump2, 1);
+        trumpSoundIds[2] = soundPool.load(getContext(), R.raw.trump3, 1);
+        trumpSoundIds[3] = soundPool.load(getContext(), R.raw.trump4, 1);
+        trumpSoundIds[4] = soundPool.load(getContext(), R.raw.trump5, 1);
+        trumpSoundStartTime = System.nanoTime();
         enemyStartTime = System.nanoTime();
         bombStartTime = System.nanoTime();
         healthStartTime = System.nanoTime();
         player.setPlaying(true);
+        player.setwRight(true);
+        player.setwLeft(false);
         thread = new MainThread(getHolder(), this);
 
         thread.setRunning(true);
@@ -115,6 +136,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         if(button1.btn_rect.contains(event.getRawX()/(getWidth()/ (WIDTH*1.f)), event.getRawY()/(getHeight()/ (HEIGHT*1.f))-75) && !fired && player.getAmmo() > 0) { //if button1  contains the touch, fire a missile once
             fired = true;
+            player.setwLeft(true);
+            player.setwRight(false);
             player.setAmmo(player.getAmmo() - 1);
             missiles.add(new Missile(BitmapFactory.decodeResource(getResources(), R.drawable.missile), player.getX()+35, player.getY()+40, 45, 15, 10, false, 13));
             soundPool.play(soundIds[1], 1, 1, 1, 0, 1);
@@ -122,6 +145,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
         if(button2.btn_rect.contains(event.getRawX()/(getWidth()/ (WIDTH*1.f)), event.getRawY()/(getHeight()/ (HEIGHT*1.f))-75) && !fired && player.getAmmo() > 0) { //if button2 contains the touch, fire a missile once
             fired = true;
+            player.setwRight(true);
+            player.setwLeft(false);
             player.setAmmo(player.getAmmo() - 1);
             missiles.add(new Missile(rotateImage(BitmapFactory.decodeResource(getResources(), R.drawable.missile), 180), player.getX()+200, player.getY()+40, 45, 15, 10, true, 13));
             soundPool.play(soundIds[1], 1, 1, 1, 0, 1);
@@ -129,9 +154,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
         if(event.getAction() == MotionEvent.ACTION_DOWN){
             if((int)event.getRawX()/(getWidth()/ (WIDTH*1.f))-100<=player.getX()){
+                player.setwRight(false);
                 player.setwLeft(true);
             }
             if((int)event.getRawX()/(getWidth()/ (WIDTH*1.f))-100 > player.getX()){
+                player.setwLeft(false);
                 player.setwRight(true);
             }
 
@@ -140,8 +167,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
         if(event.getAction() == MotionEvent.ACTION_UP){
             player.setWalk(false);
-            player.setwLeft(false);
-            player.setwRight(false);
             fired = false;
             return true;
         }
@@ -174,8 +199,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             //update bombs
             long bombElapsed = (System.nanoTime() - bombStartTime) / 1000000;
-            if(bombElapsed > 8000){
-                bombs.add(new Bomb(scaledBomb, player.getX(), 0, 35, 35));
+            if(bombElapsed > 8100-(player.getLevel()*100)){
+                bombs.add(new Bomb(scaledBomb, player.getX(), 0, 35, 35, player.getLevel()));
                 bombStartTime = System.nanoTime();
             }
             for(int i = 0; i<bombs.size(); i++){
@@ -215,8 +240,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             //update enemies
             long enemyElapsed = (System.nanoTime() - enemyStartTime) / 1000000;
-            if(enemyElapsed > 2000){
-                enemies.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.helicopter), 65, 25, player.getY() + 45, 3));
+            if(enemyElapsed > 2100-(player.getLevel()*100)){
+                enemies.add(new Enemy(BitmapFactory.decodeResource(getResources(), R.drawable.helicopter), 65, 25, player.getY() + 45, player.getLevel(), 3));
                 enemyStartTime = System.nanoTime();
             }
             for(int i = 0; i<enemies.size(); i++) {
@@ -265,7 +290,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             //update health packs. Only 1 can be active.
             long healthElapsed = (System.nanoTime() - healthStartTime) / 1000000;
-            if(healthElapsed > 10000){
+            if(healthElapsed > 15000){
                 healthPack = new HealthPack(scaledHealth, 45, 45);
                 areHealthpack = true;
                 healthStartTime = System.nanoTime();
@@ -274,8 +299,16 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 if (collision(player, healthPack)) {
                     areHealthpack = false;
                     healthPack = null;
-                    player.setHitPoints(player.getHitPoints() + 1);
+                    if(player.getHitPoints() < 7) { //cap player hp at 7
+                        player.setHitPoints(player.getHitPoints() + 1);
+                    }
                 }
+            }
+
+            long trumpSoundElapsed = (System.nanoTime() - trumpSoundStartTime) / 1000000;
+            if(trumpSoundElapsed > 5000){
+                soundPool.play(trumpSoundIds[rand.nextInt(trumpSoundIds.length)], 1, 1, 1, 0, 1);
+                trumpSoundStartTime = System.nanoTime();
             }
         }
         else{
@@ -313,11 +346,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void draw(Canvas canvas){
-        super.draw(canvas);
         final float scaleFactorX = getWidth() / (WIDTH*1.f);
         final float scaleFactorY = getHeight() / (HEIGHT*1.f);
 
         if(canvas != null){
+            super.draw(canvas);
             final int savedState = canvas.save();
             canvas.scale(scaleFactorX, scaleFactorY);
 
@@ -361,15 +394,24 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void newGame(){
+        areHealthpack = false;
+        healthPack = null;
         missiles.clear();
         enemies.clear();
         bombs.clear();
-        healthPack = null;
+        bombStartTime = System.nanoTime();
+        enemyStartTime = System.nanoTime();
+        healthStartTime = System.nanoTime();
         player.setScore(0);
         player.setHitPoints(5);
         player.setX(100);
         player.setAmmo(25);
         player.setLevel(1);
         player.setPlaying(true);
+        player.setwRight(true);
+        player.setwLeft(false);
+        scaledBG = Bitmap.createScaledBitmap(backgrounds[rand.nextInt(backgrounds.length)], WIDTH, HEIGHT, true);
+        bg = new Background(scaledBG);
+
     }
 }

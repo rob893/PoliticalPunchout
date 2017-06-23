@@ -13,12 +13,15 @@ public class Bomb extends GameObject {
     int speed;
     private Random rand = new Random();
 
-    public Bomb(Bitmap res, int x, int y, int w, int h){
+    public Bomb(Bitmap res, int x, int y, int w, int h, int playerLevel){
         this.x = x;
         this.y = y;
         width = w;
         height = h;
-        speed = 3+ rand.nextInt(3);
+        speed = playerLevel + rand.nextInt(4);
+        if(speed > 10){  //cap speed
+            speed = 10;
+        }
 
         image = Bitmap.createBitmap(res, 0, 0, width, height);
     }
